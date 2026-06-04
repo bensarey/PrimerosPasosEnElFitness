@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primeros Pasos en el Fitness</title>
+    <!-- Librería para exportar a PDF de forma limpia directamente desde el navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* --- ESTILOS GENERALES Y COLORES (Azul Marino y Dorado) --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #0b1b3d; /* Azul Marino Base */
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* --- BARRA LATERAL (Sidebar izquierda) --- */
+        .sidebar {
+            width: 320px;
+            background-color: #07122a; /* Azul más oscuro para contraste */
+            border-right: 2px solid #d4af37; /* Línea divisoria dorada */
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-btn {
+            background-color: transparent;
+            color: #d4af37;
+            border: 2px solid #d4af37;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-btn:hover, .sidebar-btn.active {
+            background-color: #d4af37;
+            color: #0b1b3d;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Bloque deshabilitado antes de crear perfil */
+        .sidebar-btn:disabled {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .sidebar-btn:disabled:hover {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-box {
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 6px;
+            flex-grow: 1;
+            margin-top: 10px;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .summary-box h3 {
+            color: #d4af37;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .summary-box p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        /* --- CONTENIDO PRINCIPAL (Panel derecho) --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .view-panel {
+            display: none;
+            width: 100%;
+            max-width: 850px;
+            background: rgba(7, 18, 42, 0.6);
+            padding: 35px;
+            border-radius: 12px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .view-panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* --- DISEÑO DE CONFIGURACIÓN POR BLOQUES (Imagen 4fc5c1, 4f5d5b) --- */
+        .dashboard-grid {
+            display: flex;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .dash-card {
+            flex: 1;
+            background: #0b1b3d;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .dash-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .dash-card h3 {
+            color: #d4af37;
+            font-size: 22px;
+            text-transform: uppercase;
+        }
+
+        /* Layout de dos columnas para planificación */
+        .plan-layout {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .plan-selectors {
+            flex: 1;
+            background: rgba(11, 27, 61, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .plan-output-container {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .plan-display {
+            background: #0b1b3d;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 5px solid #d4af37;
+            min-height: 250px;
+        }
+
+        /* --- ENCABEZADOS Y TEXTOS --- */
+        h1.main-title {
+            font-size: 48px;
+            color: #d4af37;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .welcome-header h2 {
+            font-size: 32px;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+        .welcome-header h2 span, .welcome-header p span {
+            color: #d4af37;
+            font-weight: bold;
+        }
+
+        /* --- ELEMENTOS DE FORMULARIO --- */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            background-color: #0b1b3d;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: white;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+        }
+
+        .submit-btn, .action-btn {
+            background-color: #d4af37;
+            color: #0b1b3d;
+            border: none;
+            padding: 13px;
+            width: 100%;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            text-transform: uppercase;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover, .action-btn:hover {
+            background-color: #f1c40f;
+        }
+
+        .pdf-btn {
+            background-color: transparent;
+            color: #ffffff;
+            border: 2px solid #d4af37;
+            margin-top: 10px;
+        }
+        .pdf-btn:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+        }
+
+        /* --- NOTAS ADVERTENCIA --- */
+        .warning-note {
+            background: rgba(231, 76, 60, 0.15);
+            border-left: 4px solid #e74c3c;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 15px;
+            color: #f1948a;
+        }
+
+        /* --- ESTILOS EXCLUSIVOS REPORTE PDF (Oculto en pantalla para diseño limpio) --- */
+        .pdf-template {
+            color: #000000 !important;
+            background: #ffffff !important;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+        }
+        .pdf-template h2 { color: #0b1b3d; border-bottom: 2px solid #d4af37; padding-bottom: 8px; margin-bottom: 15px;}
+        .pdf-template .meta-info { margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 5px; }
+        .pdf-template ul { margin-left: 25px; margin-top: 10px; }
+        .pdf-template li { margin-bottom: 6px; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA LATERAL (IZQUIERDA) -->
+    <div class="sidebar">
+        <button class="sidebar-btn active" id="menu-profile" onclick="showView('view-profile', this)">Crear Perfil</button>
+        <button class="sidebar-btn" id="menu-dash" onclick="showView('view-dashboard', this)" disabled>Mi Panel Fitness</button>
+        <button class="sidebar-btn" id="menu-routine" onclick="showView('view-routines', this)" disabled>Plan de Entrenamiento</button>
+        <button class="sidebar-btn" id="menu-diet" onclick="showView('view-diet', this)" disabled>Plan Alimentario</button>
+        
+        <div class="summary-box">
+            <h3>Sobre este sitio</h3>
+            <p>Una plataforma inteligente diseñada especialmente para jóvenes que quieren dar sus primeros pasos en el fitness con planes adaptados, coherentes y estructurados sin registros forzados.</p>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL (DERECHA) -->
+    <div class="main-content">
+
+        <!-- FORMULARIO DE PERFIL (VISTA INICIAL) -->
+        <div id="view-profile" class="view-panel active">
+            <h1 class="main-title">Primeros Pasos en el Fitness</h1>
+            <p style="text-align: center; margin-bottom: 25px; color: #e0e0e0;">Completa tus datos para desbloquear tu panel de control personalizado.</p>
+            
+            <form id="fitnessForm" onsubmit="registerProfile(event)">
+                <div class="form-group">
+                    <label>Tu Apodo o Nombre:</label>
+                    <input type="text" id="nickname" required placeholder="Ej: Carlos, FitGamer, Vale">
+                </div>
+                <div class="form-group" style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>Sexo:</label>
+                        <select id="gender" required>
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Edad (años):</label>
+                        <input type="number" id="age" min="1" max="120" required placeholder="Ej: 21">
+                    </div>
+                </div>
+                <div class="form-group" style="display: flex; gap: 15px;">
+                    <div style="flex: 1;">
+                        <label>Altura (en cm):</label>
+                        <input type="number" id="height" min="50" max="250" required placeholder="Ej: 175">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Peso (en kg):</label>
+                        <input type="number" id="weight" step="0.1" min="10" max="300" required placeholder="Ej: 70">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nivel de Actividad:</label>
+                    <select id="activity" required>
+                        <option value="1.2">Bajo (Poco o ningún ejercicio)</option>
+                        <option value="1.375">Moderado (Ejercicio ligero 1-3 días/semana)</option>
+                        <option value="1.55">Alto (Ejercicio moderado 3-5 días/semana)</option>
+                        <option value="1.725">Muy Alto (Ejercicio fuerte 6-7 días/semana)</option>
+                        <option value="1.9">Hiperactivo (Trabajo físico pesado extremo)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Objetivo:</label>
+                    <select id="goal" required>
+                        <option value="perder">Perder peso</option>
+                        <option value="perder_lento">Perder peso lentamente</option>
+                        <option value="mantener">Mantener peso</option>
+                        <option value="ganar_lento">Aumentar peso lentamente</option>
+                        <option value="ganar">Aumentar peso</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Crear Perfil e Ingresar</button>
+            </form>
+        </div>
+
+        <!-- DASHBOARD CENTRAL (Imagen 4fc5c1) -->
+        <div id="view-dashboard" class="view-panel">
+            <div class="welcome-header">
+                <h2>¡Bienvenido, <span id="dash-user">Usuario</span>!</h2>
+                <p>Recordar que tu objetivo actual es: <span id="dash-goal">Objetivo</span></p>
+            </div>
+
+            <!-- Métricas Calculadas en el Perfil -->
+            <div style="background: rgba(255,255,255,0.04); padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid rgba(212,175,55,0.2);">
+                <h4 style="color:#d4af37; text-transform:uppercase; margin-bottom:10px; font-size:14px; letter-spacing:1px;">Tus Parámetros Fisiológicos Básicos:</h4>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; text-align:center;">
+                    <div style="background:#07122a; padding:10px; border-radius:6px;"><p style="font-size:12px; color:#aaa;">IMC</p><h3 id="calc-imc" style="color:#fff;">--</h3></div>
+                    <div style="background:#07122a; padding:10px; border-radius:6px;"><p style="font-size:12px; color:#aaa;">Calorías Base</p><h3 id="calc-cal" style="color:#fff;">-- kcal</h3></div>
+                    <div style="background:#07122a; padding:10px; border-radius:6px;"><p style="font-size:12px; color:#aaa;">Agua Diaria</p><h3 id="calc-water" style="color:#fff;">-- L</h3></div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dash-card" onclick="showView('view-routines', document.getElementById('menu-routine'))">
+                    <h3>Planifica tu rutina de entrenamiento</h3>
+                    <p style="font-size:13px; color:#aaa; margin-top:10px;">Configura días, lugar y ejercicios inteligentes</p>
+                </div>
+                <div class="dash-card" onclick="showView('view-diet', document.getElementById('menu-diet'))">
+                    <h3>Planifica tu menú</h3>
+                    <p style="font-size:13px; color:#aaa; margin-top:10px;">Obtén tu minuta calórica estructurada</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN RUTINAS INTELIGENTES (Imagen 4f5d5b) -->
+        <div id="view-routines" class="view-panel">
+            <div class="welcome-header">
+                <h2>Planifica tu rutina de entrenamiento, <span class="user-placeholder">Usuario</span></h2>
+            </div>
+
+            <div class="plan-layout">
+                <div class="plan-selectors">
+                    <div class="form-group">
+                        <label>¿Cuántos días entrenarás?</label>
+                        <select id="routine-days" onchange="updateRoutine()">
+                            <option value="1">1 Día a la semana</option>
+                            <option value="2">2 Días a la semana</option>
+                            <option value="3" selected>3 Días a la semana</option>
+                            <option value="4">4 Días a la semana</option>
+                            <option value="5">5 Días a la semana</option>
+                            <option value="6">6 Días a la semana</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>¿Dónde entrenarás?</label>
+                        <select id="routine-location" onchange="updateRoutine()">
+                            <option value="casa">En Casa (Sin implementos)</option>
+                            <option value="gimnasio" selected>En Gimnasio (Con equipamiento)</option>
+                        </select>
+                    </div>
+
+                    <div id="cardio-warning" class="warning-note" style="display:none;">
+                        <strong>Nota de Coherencia:</strong> Como tu objetivo es aumentar peso, hemos omitido entrenamientos extensos de resistencia cardiovascular aeróbica (como trotar o bicicleta prolongada) para evitar un déficit energético contraproducente. Nos enfocaremos firmemente en fuerza muscular hipertrófica.
+                    </div>
+                </div>
+
+                <div class="plan-output-container">
+                    <div class="plan-display" id="routine-output">
+                        <!-- Se llena con Javascript dinámicamente -->
+                    </div>
+                    <button class="action-btn pdf-btn" onclick="downloadRoutinePDF()">Descargar plan de rutina en .pdf</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN PLAN ALIMENTARIO AUTOMÁTICO (Imagen 4f58df) -->
+        <div id="view-diet" class="view-panel">
+            <div class="welcome-header">
+                <h2>Tu plan de alimentación que deberás seguir, <span class="user-placeholder">Usuario</span></h2>
+            </div>
+
+            <div class="plan-output-container" style="max-width:750px; margin: 0 auto; width:100%;">
+                <div class="plan-display" id="diet-output" style="min-height:300px;">
+                    <!-- Se llena con Javascript dinámicamente -->
+                </div>
+                <button class="action-btn pdf-btn" onclick="downloadDietPDF()">Descargar plan alimentario .pdf</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- --- ELEMENTOS AUXILIARES OCULTOS PARA GENERAR LOS PDF LIMPIOS SIN INTERFAZ --- -->
+    <div id="pdf-routine-content" style="display: none;"></div>
+    <div id="pdf-diet-content" style="display: none;"></div>
+
+    <!-- --- LÓGICA DE CONTROL (JavaScript) --- -->
+    <script>
+        // Objeto global de almacenamiento en memoria volatil (se destruye al cerrar la pestaña)
+        let userProfile = {
+            nickname: "", gender: "", age: 0, height: 0, weight: 0, activityFactor: 1.2, goal: "", imc: 0, status: "", tmb: 0, targetCalories: 0, water: 0
+        };
+
+        function showView(viewId, buttonElement) {
+            const panels = document.querySelectorAll('.view-panel');
+            panels.forEach(panel => panel.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.sidebar-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            const activePanel = document.getElementById(viewId);
+            if (activePanel) activePanel.classList.add('active');
+            if (buttonElement) buttonElement.classList.add('active');
+        }
+
+        // Manejo del Perfil e Ingreso Inicial
+        function registerProfile(event) {
+            event.preventDefault();
+
+            userProfile.nickname = document.getElementById('nickname').value;
+            userProfile.gender = document.getElementById('gender').value;
+            userProfile.age = parseInt(document.getElementById('age').value);
+            userProfile.height = parseInt(document.getElementById('height').value);
+            userProfile.weight = parseFloat(document.getElementById('weight').value);
+            userProfile.activityFactor = parseFloat(document.getElementById('activity').value);
+            userProfile.goal = document.getElementById('goal').value;
+
+            // Cálculos Fisiológicos Básicos
+            const hMeters = userProfile.height / 100;
+            userProfile.imc = userProfile.weight / (hMeters * hMeters);
+            
+            if (userProfile.imc < 18.5) userProfile.status = "Bajo peso";
+            else if (userProfile.imc < 25) userProfile.status = "Peso normal";
+            else if (userProfile.imc < 30) userProfile.status = "Sobrepeso";
+            else userProfile.status = "Obesidad";
+
+            if (userProfile.gender === 'male') {
+                userProfile.tmb = 88.362 + (13.397 * userProfile.weight) + (4.799 * userProfile.height) - (5.677 * userProfile.age);
+            } else {
+                userProfile.tmb = 447.593 + (9.247 * userProfile.weight) + (3.098 * userProfile.height) - (4.330 * userProfile.age);
+            }
+
+            let tdee = userProfile.tmb * userProfile.activityFactor;
+            if (userProfile.goal === 'perder') userProfile.targetCalories = tdee - 500;
+            else if (userProfile.goal === 'perder_lento') userProfile.targetCalories = tdee - 250;
+            else if (userProfile.goal === 'ganar_lento') userProfile.targetCalories = tdee + 250;
+            else if (userProfile.goal === 'ganar') userProfile.targetCalories = tdee + 500;
+            else userProfile.targetCalories = tdee;
+
+            userProfile.water = (userProfile.weight * 35) / 1000;
+
+            // Desbloquear Menú de navegación
+            document.getElementById('menu-dash').disabled = false;
+            document.getElementById('menu-routine').disabled = false;
+            document.getElementById('menu-diet').disabled = false;
+
+            // Poblar marcadores visuales del nombre/objetivo
+            document.getElementById('dash-user').innerText = userProfile.nickname;
+            
+            const goalTexts = {
+                'perder': 'Perder peso de forma controlada',
+                'perder_lento': 'Perder peso paulatinamente (Cuidado Muscular)',
+                'mantener': 'Mantener condición y peso actual',
+                'ganar_lento': 'Aumentar masa muscular de forma limpia',
+                'ganar': 'Aumentar masa muscular y fuerza'
+            };
+            document.getElementById('dash-goal').innerText = goalTexts[userProfile.goal];
+            
+            document.querySelectorAll('.user-placeholder').forEach(el => el.innerText = userProfile.nickname);
+
+            // Poblar números rápidos del panel principal
+            document.getElementById('calc-imc').innerText = userProfile.imc.toFixed(1) + " (" + userProfile.status + ")";
+            document.getElementById('calc-cal').innerText = Math.round(userProfile.targetCalories) + " kcal";
+            document.getElementById('calc-water').innerText = userProfile.water.toFixed(1) + " L";
+
+            // Inicializar las pantallas dinámicas
+            updateRoutine();
+            updateDiet();
+
+            // Saltar automáticamente al panel de control
+            showView('view-dashboard', document.getElementById('menu-dash'));
+        }
+
+        // Generador Inteligente de Rutinas (Evita inconsistencias de cardio si se busca subir de peso)
+        function updateRoutine() {
+            const days = document.getElementById('routine-days').value;
+            const location = document.getElementById('routine-location').value;
+            const output = document.getElementById('routine-output');
+            const warning = document.getElementById('cardio-warning');
+
+            // Mostrar u ocultar advertencia si quiere subir de peso
+            if (userProfile.goal.includes('ganar')) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+
+            let htmlContent = `<h3 style="color:#d4af37; margin-bottom:12px; font-size:18px;">Estructura Automatizada (${days} días - En ${location.toUpperCase()})</h3>`;
+            
+            if (location === 'casa') {
+                htmlContent += `<p style="margin-bottom:10px; font-size:14px; color:#ccc;">Enfoque corporal utilizando peso de gravedad y resistencia controlada. Realizar cada circuito descansando 60 segundos por estación.</p>`;
+                if (days <= 3) {
+                    htmlContent += `
+                        <div style="margin-top:10px;">
+                            <strong>Rutina Fullbody (Lunes - Miércoles - Viernes):</strong>
+                            <ul style="margin-left:20px; margin-top:8px; font-size:14px; line-height:1.6;">
+                                <li>Sentadillas Corporales (3 series de 15 repeticiones)</li>
+                                <li>Flexiones de brazos / Apoyo de rodillas (3 series al fallo técnico)</li>
+                                <li>Zancadas Dinámicas hacia atrás (3 series de 12 por pierna)</li>
+                                <li>Flexiones en pica para hombros (3 series de 8 repeticiones)</li>
+                                <li>Plancha isométrica (3 series de 30 segundos)</li>
+                            </ul>
+                        </div>`;
+                } else {
+                    htmlContent += `
+                        <div style="margin-top:10px;">
+                            <strong>Esquema dividido Torso/Pierna alternado:</strong>
+                            <ul style="margin-left:20px; margin-top:8px; font-size:14px; line-height:1.6;">
+                                <li>Días 1 y 3 (Torso Focus): Flexiones, Fondos en silla, Remo invertido bajo mesa, Plancha.</li>
+                                <li>Días 2 y 4 (Piernas Focus): Sentadillas búlgaras, Elevaciones de pantorrilla, Puentes de glúteo a una pierna.</li>
+                            </ul>
+                        </div>`;
+                }
+            } else { // Gimnasio
+                htmlContent += `<p style="margin-bottom:10px; font-size:14px; color:#ccc;">Enfoque basado en sobrecarga progresiva y movimientos multiarticulares mecánicos seguros para principiantes.</p>`;
+                if (days <= 3) {
+                    htmlContent += `
+                        <div style="margin-top:10px;">
+                            <strong>Rutina de Fuerza Base Global (3 días alternados):</strong>
+                            <ul style="margin-left:20px; margin-top:8px; font-size:14px; line-height:1.6;">
+                                <li>Prensa de Piernas Horizontal (3 series de 10 reps)</li>
+                                <li>Polea al pecho / Lat pulldown (3 series de 12 reps)</li>
+                                <li>Press de Pecho en máquina guiada (3 series de 10 reps)</li>
+                                <li>Press de hombros sentado con mancuernas (3 series de 12 reps)</li>
+                                <li>Extensión de tríceps en polea alta (2 series de 15 reps)</li>
+                            </ul>
+                        </div>`;
+                } else {
+                    htmlContent += `
+                        <div style="margin-top:10px;">
+                            <strong>Esquema Empuje / Tirón / Pierna (Ideal Principiantes Gym):</strong>
+                            <ul style="margin-left:20px; margin-top:8px; font-size:14px; line-height:1.6;">
+                                <li>Día 1 (Empuje): Pecho, Hombro frontal y Tríceps mecánicos.</li>
+                                <li>Día 2 (Tirón): Dorsales, Espalda alta y Bíceps con mancuerna.</li>
+                                <li>Día 3 (Pierna Completa): Cuádriceps en prensa y máquina de femorales.</li>
+                                <li>Día 4: Repetición cíclica del bloque.</li>
+                            </ul>
+                        </div>`;
+                }
+            }
+            output.innerHTML = htmlContent;
+        }
+
+        // Generador Inteligente de Plan Alimentario según Objetivo Calórico
+        function updateDiet() {
+            const output = document.getElementById('diet-output');
+            const targetCalories = Math.round(userProfile.targetCalories);
+            
+            let proteinTarget = Math.round(userProfile.weight * 1.8); // 1.8g por kg peso objetivo fitness inicial
+            let macroText = `Aporte aproximado sugerido: <strong>${proteinTarget}g Proteína</strong>`;
+
+            let htmlContent = `
+                <h3 style="color:#d4af37; margin-bottom:15px; font-size:18px;">Minuta Orientativa Diaria (${targetCalories} kcal)</h3>
+                <p style="font-size:13px; color:#ccc; margin-bottom:15px;">Calculada con base en un balance macronutricional para jóvenes. ${macroText}.</p>
+            `;
+
+            if (userProfile.goal.includes('perder')) {
+                htmlContent += `
+                    <div style="display:flex; flex-direction:column; gap:12px; font-size:14px; line-height:1.5;">
+                        <div><strong>Desayuno Saciante:</strong> 3 Huevos revueltos, 1 tostada de pan integral, té o café sin azúcar.</div>
+                        <div><strong>Almuerzo de Control:</strong> 150g de pechuga de pollo o pavo, plato abundante de lechuga, espinaca y pepino con 1 cucharadita de aceite de oliva, 100g de arroz o papa cocida.</div>
+                        <div><strong>Merienda / Snack:</strong> 1 Yogur batido dietético o proteínas con 15g de nueces o almendras.</div>
+                        <div><strong>Cena Ligera:</strong> 150g de pescado blanco o atún al agua, verduras salteadas (zapallo italiano, champiñones, brócoli).</div>
+                    </div>`;
+            } else if (userProfile.goal.includes('ganar')) {
+                htmlContent += `
+                    <div style="display:flex; flex-direction:column; gap:12px; font-size:14px; line-height:1.5;">
+                        <div><strong>Desayuno Energético:</strong> 60g de avena licuada, 1 plátano entero, 250ml de leche, 2 huevos enteros cocidos.</div>
+                        <div><strong>Almuerzo de Volumen:</strong> 200g de carne molida magra o pollo, 200g de arroz cocido o fideos, 1/2 palta mediana.</div>
+                        <div><strong>Merienda / Post-Entreno:</strong> Sándwich doble de jamón de pavo y queso, más 1 manzana.</div>
+                        <div><strong>Cena de Recuperación:</strong> 180g de filete de salmón o pollo, 250g de puré de papas o camote, ensalada verde mixta.</div>
+                    </div>`;
+            } else { // Mantener
+                htmlContent += `
+                    <div style="display:flex; flex-direction:column; gap:12px; font-size:14px; line-height:1.5;">
+                        <div><strong>Desayuno Isocalórico:</strong> 2 huevos revueltos, 2 tostadas integrales, 1/4 de palta, café.</div>
+                        <div><strong>Almuerzo Equilibrado:</strong> 150g de pechuga de pollo, 150g de arroz integral, ensalada mixta multicolor con aceite de oliva.</div>
+                        <div><strong>Merienda / Snack:</strong> 1 taza de fruta picada variada y 1 puñado de frutos secos.</div>
+                        <div><strong>Cena Equilibrada:</strong> 150g de carne magra o legumbres preparadas, ensalada de tomates y vainitas verdes.</div>
+                    </div>`;
+            }
+            output.innerHTML = htmlContent;
+        }
+
+        // Funciones para Descargar en PDF formateando un HTML temporal limpio
+        function downloadRoutinePDF() {
+            const element = document.getElementById('pdf-routine-content');
+            element.style.display = "block";
+            
+            const days = document.getElementById('routine-days').value;
+            const location = document.getElementById('routine-location').value;
+            
+            element.innerHTML = `
+                <div class="pdf-template">
+                    <h2>Plan de Entrenamiento Personalizado</h2>
+                    <div class="meta-info">
+                        <p><strong>Usuario:</strong> ${userProfile.nickname} | <strong>Objetivo de Base:</strong> ${userProfile.goal.toUpperCase()}</p>
+                        <p><strong>Frecuencia Elegida:</strong> ${days} días por semana | <strong>Entorno:</strong> En ${location.toUpperCase()}</p>
+                    </div>
+                    <div>${document.getElementById('routine-output').innerHTML}</div>
+                    <p style="margin-top:30px; font-size:11px; color:#555; text-align:center;">Plan generado de forma gratuita por la plataforma Primeros Pasos en el Fitness.</p>
+                </div>`;
+            
+            const opt = {
+                margin: 10, filename: `Rutina_${userProfile.nickname}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = "none";
+            });
+        }
+
+        function downloadDietPDF() {
+            const element = document.getElementById('pdf-diet-content');
+            element.style.display = "block";
+            
+            element.innerHTML = `
+                <div class="pdf-template">
+                    <h2>Plan de Alimentación Guía</h2>
+                    <div class="meta-info">
+                        <p><strong>Usuario:</strong> ${userProfile.nickname} | <strong>IMC:</strong> ${userProfile.imc.toFixed(1)} (${userProfile.status})</p>
+                        <p><strong>Gasto de Energía Calculado:</strong> ${Math.round(userProfile.targetCalories)} kcal diarios | <strong>Meta hídrica diaria:</strong> ${userProfile.water.toFixed(1)} Litros</p>
+                    </div>
+                    <div>${document.getElementById('diet-output').innerHTML}</div>
+                    <p style="margin-top:30px; font-size:11px; color:#555; text-align:center;">Plan generado de forma gratuita por la plataforma Primeros Pasos en el Fitness.</p>
+                </div>`;
+            
+            const opt = {
+                margin: 10, filename: `Plan_Alimentario_${userProfile.nickname}.pdf`, image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.display = "none";
+            });
+        }
+    </script>
+</body>
+</html>
